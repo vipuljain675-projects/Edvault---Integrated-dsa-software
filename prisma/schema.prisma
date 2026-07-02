@@ -1,0 +1,400 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("STUDENT") // STUDENT | INSTRUCTOR | ADMIN
+  bio           String?
+  xp            Int       @default(0)
+  level         Int       @default(1)
+  streak        Int       @default(0)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  onboarded      Boolean   @default(false)
+  dsaLevel       String?   // BEGINNER | INTERMEDIATE | ADVANCED
+  targetCompany  String?   // FAANG | STARTUPS | SERVICE
+  targetTimeline String?   // 1_MONTH | 3_MONTHS | 6_MONTHS
+  college        String?   // User's college/university
+  gradYear       String?   // Graduation year
+  leetcodeUsername String? // LeetCode username for sync
+  leetcodeSynced   Boolean  @default(false)
+  leetcodeSyncedAt DateTime?
+
+  // Auth
+  accounts      Account[]
+  sessions      Session[]
+
+  // Platform
+  enrollments   Enrollment[]
+  courses       Course[]       @relation("InstructorCourses")
+  quizAttempts  QuizAttempt[]
+  badges        UserBadge[]
+  streakLogs    StreakLog[]
+  aiSessions    AISession[]
+  reviews       Review[]
+  lobbies       LobbyMember[]
+  solveLogs     ProblemSolveLog[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Course {
+  id           String   @id @default(cuid())
+  title        String
+  slug         String   @unique
+  description  String
+  thumbnail    String?
+  price        Int      @default(0) // in INR paise (0 = free)
+  level        String   @default("BEGINNER") // BEGINNER | INTERMEDIATE | ADVANCED
+  category     String   // ML | DSA | FULLSTACK | DEVOPS
+  tags         String?  // JSON array stored as string
+  instructorId String
+  published    Boolean  @default(false)
+  featured     Boolean  @default(false)
+  totalLessons Int      @default(0)
+  totalDuration Int     @default(0) // in seconds
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  instructor   User         @relation("InstructorCourses", fields: [instructorId], references: [id])
+  chapters     Chapter[]
+  enrollments  Enrollment[]
+  reviews      Review[]
+
+  @@map("courses")
+}
+
+model Chapter {
+  id       String   @id @default(cuid())
+  courseId String
+  title    String
+  order    Int
+  createdAt DateTime @default(now())
+
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons  Lesson[]
+
+  @@map("chapters")
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  chapterId   String
+  title       String
+  description String?
+  videoUrl    String?
+  duration    Int      @default(0) // seconds
+  order       Int
+  isFree      Boolean  @default(false)
+  transcript  String?
+  resources   String?  // JSON array of {title, url}
+  createdAt   DateTime @default(now())
+
+  chapter     Chapter     @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  progress    LessonProgress[]
+  quizzes     Quiz[]
+  aiSessions  AISession[]
+
+  @@map("lessons")
+}
+
+model Enrollment {
+  id          String    @id @default(cuid())
+  userId      String
+  courseId    String
+  progress    Float     @default(0) // 0-100
+  completedAt DateTime?
+  enrolledAt  DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
+
+model LessonProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  completed   Boolean  @default(false)
+  watchTime   Int      @default(0) // seconds watched
+  completedAt DateTime?
+  updatedAt   DateTime @updatedAt
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("lesson_progress")
+}
+
+model Quiz {
+  id            String   @id @default(cuid())
+  lessonId      String
+  questions     String   // JSON: [{question, options, correct, explanation}]
+  generatedByAI Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  lesson   Lesson        @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  attempts QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model QuizAttempt {
+  id        String   @id @default(cuid())
+  userId    String
+  quizId    String
+  score     Int      // 0-100
+  answers   String   // JSON
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_attempts")
+}
+
+model Badge {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  icon        String   // emoji or icon name
+  color       String   @default("#7C3AED")
+  condition   String   // JSON: {type, threshold}
+  rarity      String   @default("COMMON") // COMMON | RARE | EPIC | LEGENDARY
+  createdAt   DateTime @default(now())
+
+  users UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  badgeId  String
+  earnedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model StreakLog {
+  id             String   @id @default(cuid())
+  userId         String
+  date           String   // YYYY-MM-DD
+  minutesStudied Int      @default(0)
+  xpEarned       Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("streak_logs")
+}
+
+model AISession {
+  id        String   @id @default(cuid())
+  userId    String
+  lessonId  String?
+  courseId  String?
+  sessionType String  @default("STUDY_BUDDY") // STUDY_BUDDY | ROADMAP | QUIZ | INSIGHTS
+  messages  String   // JSON array of {role, content, timestamp}
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson? @relation(fields: [lessonId], references: [id])
+
+  @@map("ai_sessions")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("reviews")
+}
+
+model BlogPost {
+  id         String   @id @default(cuid())
+  title      String
+  slug       String   @unique
+  desc       String
+  body       String
+  category   String
+  readTime   String
+  color      String
+  featured   Boolean  @default(false)
+  authorName String
+  createdAt  DateTime @default(now())
+
+  @@map("blog_posts")
+}
+
+model CommunityThread {
+  id         String   @id @default(cuid())
+  title      String
+  desc       String
+  category   String
+  authorName String
+  badgeColor String
+  views      Int      @default(0)
+  createdAt  DateTime @default(now())
+  
+  comments   CommunityComment[]
+
+  @@map("community_threads")
+}
+
+model CommunityComment {
+  id         String   @id @default(cuid())
+  threadId   String
+  authorName String
+  content    String
+  createdAt  DateTime @default(now())
+
+  thread     CommunityThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@map("community_comments")
+}
+
+// ─── DSA Command Center ───────────────────────────────────────
+
+model DSATopic {
+  id          String       @id @default(cuid())
+  slug        String       @unique  // "arrays", "trees", "dp"
+  title       String                // "Arrays & Hashing"
+  icon        String                // emoji: "📦"
+  order       Int                   // learning sequence (1 = first)
+  concept     String                // pre-seeded theory blurb
+  keyPatterns String                // JSON: ["Sliding Window", "Two Pointer"]
+  createdAt   DateTime     @default(now())
+
+  problems    DSAProblem[]
+
+  @@map("dsa_topics")
+}
+
+model DSAProblem {
+  id           String   @id @default(cuid())
+  topicId      String
+  title        String
+  titleSlug    String   @unique  // "two-sum" (matches LeetCode slug for auto-sync)
+  difficulty   String            // EASY | MEDIUM | HARD
+  leetcodeUrl  String
+  sheets       String            // JSON: ["BLIND_75", "LOVE_BABBAR", "STRIVER_SDE"]
+  orderInTopic Int               // order within topic
+  createdAt    DateTime @default(now())
+
+  topic        DSATopic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  solveLogs    ProblemSolveLog[]
+
+  @@map("dsa_problems")
+}
+
+model ProblemSolveLog {
+  id        String   @id @default(cuid())
+  userId    String
+  problemId String
+  status    String   @default("SOLVED") // SOLVED | ATTEMPTED | BOOKMARKED
+  source    String   @default("MANUAL") // MANUAL | LEETCODE_SYNC
+  solvedAt  DateTime @default(now())
+
+  problem   DSAProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+  @@map("problem_solve_logs")
+}
+
+model Lobby {
+  id        String        @id @default(cuid())
+  code      String        @unique
+  name      String
+  createdAt DateTime      @default(now())
+  members   LobbyMember[]
+
+  @@map("lobbies")
+}
+
+model LobbyMember {
+  id        String   @id @default(cuid())
+  lobbyId   String
+  userId    String
+  role      String   @default("MEMBER") // HOST | MEMBER
+  joinedAt  DateTime @default(now())
+  lobby     Lobby    @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([lobbyId, userId])
+  @@map("lobby_members")
+}
