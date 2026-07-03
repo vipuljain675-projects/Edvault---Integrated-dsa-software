@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { fetchRecentSolved, fetchActivityCalendar } from "@/lib/leetcode";
+import { fetchActivityCalendar, fetchAllSolvedQuestions } from "@/lib/leetcode";
 import { recalculateUserStreak } from "@/lib/streak";
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,16 +33,15 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 1. Fetch recent accepted submissions from LeetCode
-  const recentSolved = await fetchRecentSolved(user.leetcodeUsername, 50);
+  // 1. Fetch accepted problem slugs LeetCode exposes publicly.
+  // Future/recent solves are imported automatically; older solves need a
+  // full-history source if LeetCode does not expose them publicly.
+  const solvedQuestions = await fetchAllSolvedQuestions(user.leetcodeUsername);
 
   // 2. Fetch activity calendar from LeetCode to get streak and historical calendar
   const calendar = await fetchActivityCalendar(user.leetcodeUsername);
-  let leetcodeStreak = user.streak || 0;
 
   if (calendar) {
-    leetcodeStreak = calendar.streak || 0;
-
     // Parse and import historical LeetCode submission dates into StreakLog
     if (calendar.submissionCalendar) {
       try {
@@ -72,42 +71,50 @@ export async function POST(req: NextRequest) {
   let totalXP = 0;
   let newlySyncedCount = 0;
 
-  if (recentSolved.length > 0) {
+  let matchedSheetProblemsCount = 0;
+
+  if (solvedQuestions.length > 0) {
     // Get all slugs from DB
-    const slugsFromLC = recentSolved.map((s) => s.titleSlug);
+    const slugsFromLC = Array.from(new Set(solvedQuestions.map((s) => s.titleSlug).filter(Boolean)));
     const matchingProblems = await prisma.dSAProblem.findMany({
       where: { titleSlug: { in: slugsFromLC } },
       select: { id: true, titleSlug: true, difficulty: true },
     });
+    matchedSheetProblemsCount = matchingProblems.length;
 
     // Find which ones aren't already marked
     const existingLogs = await prisma.problemSolveLog.findMany({
       where: {
         userId,
-        problemId: { in: matchingProblems.map((p) => p.id) },
+        problemId: { in: matchingProblems.map((p: any) => p.id) },
       },
-      select: { problemId: true },
+      select: { problemId: true, status: true },
     });
 
-    const alreadyLoggedIds = new Set(existingLogs.map((l) => l.problemId));
-    const newlySolved = matchingProblems.filter((p) => !alreadyLoggedIds.has(p.id));
+    const alreadySolvedIds = new Set(existingLogs.filter((l: any) => l.status === "SOLVED").map((l: any) => l.problemId));
+    const newlySolved = matchingProblems.filter((p: any) => !alreadySolvedIds.has(p.id));
     newlySyncedCount = newlySolved.length;
 
     // Calculate XP to award
     const xpMap: Record<string, number> = { EASY: 10, MEDIUM: 20, HARD: 40 };
 
     if (newlySolved.length > 0) {
-      await prisma.problemSolveLog.createMany({
-        data: newlySolved.map((p) => ({
-          userId,
-          problemId: p.id,
-          status: "SOLVED",
-          source: "LEETCODE_SYNC",
-        })),
-        skipDuplicates: true,
-      });
+      await Promise.all(
+        newlySolved.map((p: any) =>
+          prisma.problemSolveLog.upsert({
+            where: { userId_problemId: { userId, problemId: p.id } },
+            update: { status: "SOLVED", source: "LEETCODE_SYNC" },
+            create: {
+              userId,
+              problemId: p.id,
+              status: "SOLVED",
+              source: "LEETCODE_SYNC",
+            },
+          })
+        )
+      );
 
-      totalXP = newlySolved.reduce((acc, p) => acc + (xpMap[p.difficulty] ?? 10), 0);
+      totalXP = newlySolved.reduce((acc: number, p: any) => acc + (xpMap[p.difficulty] ?? 10), 0);
       if (totalXP > 0) {
         await prisma.user.update({
           where: { id: userId },
@@ -138,7 +145,8 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    matched: recentSolved.length,
+    leetcodeSolved: solvedQuestions.length,
+    matched: matchedSheetProblemsCount,
     newlySynced: newlySyncedCount,
     xpAwarded: totalXP,
     streak: finalStreak,

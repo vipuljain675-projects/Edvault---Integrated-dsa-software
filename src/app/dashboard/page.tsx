@@ -27,6 +27,7 @@ export default async function DashboardPage() {
       dsaLevel: true,
       targetCompany: true,
       college: true,
+      createdAt: true,
     },
   });
 
@@ -60,7 +61,7 @@ export default async function DashboardPage() {
     prisma.streakLog.findMany({
       where: { userId },
       orderBy: { date: "desc" },
-      take: 14,
+      take: 365,
     }),
     prisma.dSAProblem.findMany({
       include: {
@@ -123,6 +124,7 @@ export default async function DashboardPage() {
         levelName,
         leetcodeUsername: cleanLcUsername,
         leetcodeSyncedAt: user.leetcodeSyncedAt?.toISOString() ?? null,
+        createdAt: user.createdAt.toISOString(),
         dsaLevel: user.dsaLevel ?? "BEGINNER",
         targetCompany: user.targetCompany ?? "FAANG",
         college: user.college ?? "",
@@ -137,6 +139,7 @@ export default async function DashboardPage() {
         nextProblems: nextProblems as any[],
         lcStats,
         lcTagSolved,
+        streakLogs: streakLogs as any[],
         weekStudyTime: streakLogs.slice(0, 7).reduce((acc: number, l: any) => acc + l.minutesStudied, 0),
         weekXPEarned: streakLogs.slice(0, 7).reduce((acc: number, l: any) => acc + l.xpEarned, 0),
       }}

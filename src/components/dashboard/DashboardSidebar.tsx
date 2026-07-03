@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Map, BarChart2, User,
   GraduationCap, Settings, LogOut, Brain, Flame,
-  Users, Newspaper, Zap, Sun, Moon
+  Users, Layers, Zap, Sun, Moon, Trophy, Bot
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -14,12 +14,13 @@ const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", color: "#6366F1", bg: "rgba(99,102,241,0.15)" },
   { href: "/dashboard/analytics", icon: BarChart2, label: "Analytics", color: "#06B6D4", bg: "rgba(6,182,212,0.15)" },
   { href: "/dashboard/dsa", icon: Zap, label: "DSA Sheets", color: "#F59E0B", bg: "rgba(245,158,11,0.15)" },
-  { href: "/dashboard/roadmap", icon: Map, label: "AI Roadmap", color: "#A855F7", bg: "rgba(168,85,247,0.15)" },
+  { href: "/dashboard/leaderboard", icon: Trophy, label: "Leaderboard", color: "#8B5CF6", bg: "rgba(139,92,246,0.15)" },
+  { href: "/dashboard/roadmap", icon: Bot, label: "Sensei", color: "#6366F1", bg: "rgba(99,102,241,0.15)" },
 ];
 
 const exploreItems = [
   { href: "/dashboard/lobbies", icon: Users, label: "Lobbies", color: "#10B981", bg: "rgba(16,185,129,0.15)" },
-  { href: "/blog", icon: Newspaper, label: "Blog", color: "#EC4899", bg: "rgba(236,72,153,0.15)" },
+  { href: "/dashboard/flashcards", icon: Layers, label: "Flashcards", color: "#EC4899", bg: "rgba(236,72,153,0.15)" },
 ];
 
 function NavIcon({ Icon, color, bg }: { Icon: typeof LayoutDashboard; color: string; bg: string }) {

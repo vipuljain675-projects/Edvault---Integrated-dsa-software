@@ -33,7 +33,7 @@ export default async function DashboardCoursesPage() {
   });
 
   return (
-    <div style={{ maxWidth: 1100 }}>
+    <div className="dashboard-page">
       {/* Header */}
       <div style={{ marginBottom: "2rem" }}>
         <h2 style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>

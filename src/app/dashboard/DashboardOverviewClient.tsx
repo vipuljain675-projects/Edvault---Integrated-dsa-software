@@ -21,6 +21,7 @@ interface Props {
     levelName: string;
     leetcodeUsername: string | null;
     leetcodeSyncedAt: string | null;
+    createdAt: string;
     dsaLevel: string;
     targetCompany: string;
     college: string;
@@ -35,6 +36,7 @@ interface Props {
     nextProblems: any[];
     lcStats: any;
     lcTagSolved?: Record<string, number>;
+    streakLogs: any[];
     weekStudyTime: number;
     weekXPEarned: number;
   };
@@ -232,13 +234,52 @@ export default function DashboardOverviewClient({ user, stats }: Props) {
 
   const allDailySolved = dailyProblems.every(p => isProblemSolved(p.titleSlug));
   const allWeeklySolved = weeklyProblems.every(p => isProblemSolved(p.titleSlug));
+  const joinedDate = new Date(user.createdAt);
+  const now = new Date();
+  const daysSinceJoin = Math.max(1, Math.ceil((now.getTime() - joinedDate.getTime()) / 86400000));
+  const joinLabel = joinedDate.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  const solvedWithEduVault = stats.solvedLogs.filter(log => new Date(log.solvedAt) >= joinedDate).length;
+  const solvedBeforeEduVault = stats.solvedLogs.filter(log => new Date(log.solvedAt) < joinedDate).length;
+  const activeDatesWithEduVault = new Set(
+    stats.streakLogs
+      .filter(log => new Date(`${log.date}T12:00:00`) >= joinedDate)
+      .map(log => log.date)
+  );
+  const activeDatesBeforeEduVault = new Set(
+    stats.streakLogs
+      .filter(log => new Date(`${log.date}T12:00:00`) < joinedDate)
+      .map(log => log.date)
+  );
+  const withWeeks = Math.max(1, daysSinceJoin / 7);
+  const beforeWeeks = Math.max(1, activeDatesBeforeEduVault.size / 7);
+  const beforePerWeek = solvedBeforeEduVault / beforeWeeks;
+  const withPerWeek = solvedWithEduVault / withWeeks;
+  const consistencyGrowth = beforePerWeek > 0
+    ? Math.round(((withPerWeek - beforePerWeek) / beforePerWeek) * 100)
+    : solvedWithEduVault > 0 ? 100 : 0;
+  const monthlyGrowth = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleDateString("en-US", { month: "short" }).slice(0, 1);
+    const count = stats.solvedLogs.filter(log => {
+      const solvedDate = new Date(log.solvedAt);
+      return `${solvedDate.getFullYear()}-${String(solvedDate.getMonth() + 1).padStart(2, "0")}` === key;
+    }).length;
+    return { label, count, isAfterJoin: d >= new Date(joinedDate.getFullYear(), joinedDate.getMonth(), 1) };
+  });
+  const maxMonthlySolves = Math.max(1, ...monthlyGrowth.map(month => month.count));
+  const growthPolyline = monthlyGrowth.map((month, idx) => {
+    const x = 8 + idx * (184 / Math.max(1, monthlyGrowth.length - 1));
+    const y = 82 - (month.count / maxMonthlySolves) * 66;
+    return `${x},${y}`;
+  }).join(" ");
 
   return (
-    <div style={{ maxWidth: 1100, background: "var(--bg-base)", minHeight: "100vh" }}>
+    <div className="dashboard-page animate-fade-in" style={{ background: "var(--bg-base)", minHeight: "100vh" }}>
       
 
       {/* Main Content Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "1.5rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.75fr) minmax(340px, 0.8fr)", gap: "1.5rem", alignItems: "start" }}>
         
         {/* Left Column */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -491,6 +532,64 @@ export default function DashboardOverviewClient({ user, stats }: Props) {
             </div>
           </div>
 
+        </div>
+
+        <div className="card" style={{ gridColumn: "1 / -1", padding: "1.5rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "0.85rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+            <h3 style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "1.05rem", fontWeight: 850, color: "var(--text-primary)", margin: 0 }}>
+              <TrendingUp size={18} color="#6366F1" />
+              Growth on EduVault
+            </h3>
+            <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Joined {joinLabel}</span>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(260px, 1fr) minmax(420px, 1.4fr)", gap: "1.25rem", alignItems: "stretch" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.85rem" }}>
+              <div style={{ padding: "1rem", borderRadius: "12px", background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)" }}>
+                <div style={{ color: "var(--text-disabled)", fontSize: "0.7rem", letterSpacing: "0.08em", fontWeight: 850, textTransform: "uppercase", marginBottom: "0.35rem" }}>Before EduVault</div>
+                <div style={{ fontSize: "1.45rem", color: "var(--text-primary)", fontWeight: 900 }}>{beforePerWeek.toFixed(1)}<span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}> / week</span></div>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{activeDatesBeforeEduVault.size} active days recorded</div>
+              </div>
+              <div style={{ padding: "1rem", borderRadius: "12px", background: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.22)" }}>
+                <div style={{ color: "#6366F1", fontSize: "0.7rem", letterSpacing: "0.08em", fontWeight: 850, textTransform: "uppercase", marginBottom: "0.35rem" }}>With EduVault</div>
+                <div style={{ fontSize: "1.45rem", color: "var(--text-primary)", fontWeight: 900 }}>{withPerWeek.toFixed(1)}<span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}> / week</span></div>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{activeDatesWithEduVault.size} active days since joining</div>
+              </div>
+              <div style={{ padding: "1rem", borderRadius: "12px", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.22)" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", letterSpacing: "0.08em", fontWeight: 850, textTransform: "uppercase", marginBottom: "0.35rem" }}>Consistency Growth</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "1.55rem", color: "#10B981", fontWeight: 950 }}>
+                  <TrendingUp size={22} />
+                  {consistencyGrowth >= 0 ? "+" : ""}{consistencyGrowth}%
+                </div>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>vs. your pre-EduVault pace</div>
+              </div>
+            </div>
+
+            <div style={{ border: "1px solid var(--border-subtle)", borderRadius: "12px", background: "var(--bg-elevated)", padding: "1rem", minHeight: 260 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 800 }}>Monthly solve trend</span>
+                <span style={{ fontSize: "0.72rem", color: "var(--text-disabled)" }}>{solvedWithEduVault} solves with EduVault</span>
+              </div>
+              <svg viewBox="0 0 210 110" style={{ width: "100%", height: 190, display: "block" }} preserveAspectRatio="none">
+                <line x1="8" y1="82" x2="200" y2="82" stroke="rgba(148,163,184,0.45)" strokeWidth="1.5" strokeDasharray="4 4" />
+                <polyline points={growthPolyline} fill="none" stroke="#6366F1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                {monthlyGrowth.map((month, idx) => {
+                  const x = 8 + idx * (184 / Math.max(1, monthlyGrowth.length - 1));
+                  const y = 82 - (month.count / maxMonthlySolves) * 66;
+                  return (
+                    <g key={`${month.label}-${idx}`}>
+                      <circle cx={x} cy={y} r="2.4" fill={month.isAfterJoin ? "#6366F1" : "#CBD5E1"} />
+                      <text x={x} y="102" textAnchor="middle" fontSize="6" fill="var(--text-disabled)">{month.label}</text>
+                    </g>
+                  );
+                })}
+              </svg>
+              <div style={{ display: "flex", gap: "1rem", fontSize: "0.76rem", color: "var(--text-muted)", flexWrap: "wrap" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#CBD5E1" }} /> Before EduVault</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#6366F1" }} /> With EduVault</span>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>

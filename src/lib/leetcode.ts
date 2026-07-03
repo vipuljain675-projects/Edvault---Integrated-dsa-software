@@ -25,6 +25,12 @@ interface RecentSubmission {
   timestamp: number;
 }
 
+interface SolvedQuestion {
+  title: string;
+  titleSlug: string;
+  difficulty?: string;
+}
+
 interface ActivityCalendar {
   submissionCalendar: string; // JSON string: { "timestamp": count }
   totalActiveDays: number;
@@ -127,6 +133,134 @@ export async function fetchRecentSolved(username: string, limit = 50): Promise<R
   } catch {
     return [];
   }
+}
+
+// ─── Fetch full accepted problem history ───────────────────
+// Uses multiple strategies to get as many solved slugs as possible.
+// The LeetCode public API hard-caps recentAcSubmissionList at 15 items.
+// The real fix is userProgressQuestionList which is paginated and returns ALL solved.
+export async function fetchAllSolvedQuestions(username: string): Promise<SolvedQuestion[]> {
+  const solved = new Map<string, SolvedQuestion>();
+
+  // === PRIMARY: userProgressQuestionList (paginated, returns ALL solved problems) ===
+  // This works without authentication for public profiles.
+  try {
+    const progressQuery = `
+      query userProgressQuestionList($userSlug: String!, $limit: Int!, $skip: Int!, $filters: UserProgressQuestionListFilterInput) {
+        userProgressQuestionList(userSlug: $userSlug, limit: $limit, skip: $skip, filters: $filters) {
+          totalNum
+          questions {
+            question {
+              title
+              titleSlug
+              difficulty
+            }
+          }
+        }
+      }
+    `;
+
+    let skip = 0;
+    const batchSize = 500;
+    let totalFetched = 0;
+    let totalNum = 1; // will be updated on first response
+
+    while (skip <= totalNum) {
+      const res = await fetch(LEETCODE_GQL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": USER_AGENT,
+          "Referer": `https://leetcode.com/${username}/`,
+          "Origin": "https://leetcode.com",
+        },
+        body: JSON.stringify({
+          query: progressQuery,
+          variables: {
+            userSlug: username,
+            limit: batchSize,
+            skip,
+            filters: { status: "ACCEPTED" },
+          },
+        }),
+        next: { revalidate: 0 },
+      });
+
+      if (!res.ok) break;
+      const data = await res.json();
+
+      // If this requires auth, LeetCode returns errors or null data — fall through to fallback
+      const result = data?.data?.userProgressQuestionList;
+      if (!result || data?.errors) break;
+
+      totalNum = result.totalNum ?? 0;
+      const questions: any[] = result.questions ?? [];
+      if (questions.length === 0) break;
+
+      questions.forEach((item: any) => {
+        const q = item?.question;
+        if (q?.titleSlug) {
+          solved.set(q.titleSlug, {
+            title: q.title,
+            titleSlug: q.titleSlug,
+            difficulty: q.difficulty,
+          });
+        }
+      });
+
+      totalFetched += questions.length;
+      skip += batchSize;
+      if (questions.length < batchSize) break;
+    }
+
+    if (totalFetched > 0) {
+      console.log(`[LC Sync] Fetched ${totalFetched} solved problems via userProgressQuestionList`);
+      // Still run the fallback to catch any extra
+    }
+  } catch (e) {
+    console.error("[LC Sync] userProgressQuestionList failed:", e);
+  }
+
+  // === SECONDARY: recentAcSubmissionList (public, but capped at 15 by LeetCode) ===
+  // Always run this as a supplement — it gives us the most recent solves with certainty.
+  try {
+    const recentQuery = `
+      query recentAcSubmissions($username: String!, $limit: Int!) {
+        recentAcSubmissionList(username: $username, limit: $limit) {
+          id
+          title
+          titleSlug
+          timestamp
+        }
+      }
+    `;
+    const res = await fetch(LEETCODE_GQL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": USER_AGENT,
+        "Referer": "https://leetcode.com",
+        "Origin": "https://leetcode.com",
+      },
+      body: JSON.stringify({
+        query: recentQuery,
+        variables: { username, limit: 50 },
+      }),
+      next: { revalidate: 0 },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const list: RecentSubmission[] = data?.data?.recentAcSubmissionList ?? [];
+      list.forEach((q) => {
+        if (q?.titleSlug) {
+          solved.set(q.titleSlug, { title: q.title, titleSlug: q.titleSlug });
+        }
+      });
+    }
+  } catch { /* ignore — fallback only */ }
+
+  return Array.from(solved.values());
 }
 
 // ─── Fetch activity calendar (heatmap) ─────────────────────

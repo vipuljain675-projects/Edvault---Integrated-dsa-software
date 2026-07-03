@@ -1,865 +1,730 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
-  Brain, Code2, BarChart3, Zap, Star, Users, BookOpen,
-  ArrowRight, Play, Shield, Trophy, Flame, ChevronRight,
-  Sparkles, Terminal, GitBranch, Cpu, GraduationCap, Lock
+  Brain, Code2, BarChart3, Zap, Users, BookOpen,
+  ArrowRight, Shield, Trophy, Flame, ChevronRight,
+  Sparkles, Layers, RefreshCw, Star, HelpCircle,
+  Code, Play, Volume2, Plus, Minus, GraduationCap
 } from "lucide-react";
+import toast from "react-hot-toast";
 
-// ─── Particle Canvas ──────────────────────────────────────────
-function ParticleCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const particles: Array<{
-      x: number; y: number; vx: number; vy: number;
-      size: number; opacity: number; color: string;
-    }> = [];
-
-    const colors = ["#7C3AED", "#A855F7", "#F59E0B", "#06B6D4", "#EC4899"];
-
-    for (let i = 0; i < 80; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        size: Math.random() * 2 + 0.5,
-        opacity: Math.random() * 0.6 + 0.1,
-        color: colors[Math.floor(Math.random() * colors.length)],
-      });
-    }
-
-    let animId: number;
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw connections
-      particles.forEach((p, i) => {
-        particles.slice(i + 1).forEach((p2) => {
-          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-          if (dist < 120) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(124,58,237,${0.08 * (1 - dist / 120)})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        });
-      });
-
-      // Draw + update particles
-      particles.forEach((p) => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color + Math.floor(p.opacity * 255).toString(16).padStart(2, "0");
-        ctx.fill();
-
-        p.x += p.vx;
-        p.y += p.vy;
-
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-      });
-
-      animId = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
+// ─── SVG Wave Pattern Background (From LeetRun) ───
+function LeetRunBackground() {
   return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 pointer-events-none"
-      style={{ opacity: 0.6 }}
-    />
-  );
-}
-
-// ─── Navbar ───────────────────────────────────────────────────
-import SharedNavbar from "@/components/layout/Navbar";
-
-function Navbar() {
-  return <SharedNavbar />;
-}
-
-// ─── Hero Section ──────────────────────────────────────────────
-function Hero() {
-  return (
-    <section style={{
-      minHeight: "75vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      position: "relative",
-      overflow: "hidden",
-      padding: "5rem 0 3rem",
+    <div style={{
+      position: "absolute",
+      inset: 0,
+      width: "100%",
+      height: "100%",
+      zIndex: 0,
+      pointerEvents: "none",
     }}>
-      <ParticleCanvas />
-
-      {/* Radial glow bg */}
-      <div style={{
-        position: "absolute",
-        top: "20%",
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: "800px",
-        height: "600px",
-        background: "radial-gradient(ellipse at center, rgba(124,58,237,0.15) 0%, transparent 70%)",
-        pointerEvents: "none",
-      }} />
-
-      <div className="container" style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
-
-        {/* Pill badge */}
-        <div style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "0.5rem",
-          padding: "0.4rem 1rem",
-          background: "rgba(124,58,237,0.1)",
-          border: "1px solid rgba(124,58,237,0.3)",
-          borderRadius: "var(--radius-full)",
-          marginBottom: "2rem",
-          animation: "fadeIn 0.6s ease-out",
-        }}>
-          <Sparkles size={14} color="#A855F7" />
-          <span style={{ fontSize: "0.85rem", color: "#A855F7", fontWeight: 600 }}>
-            AI-Powered Learning for College Students
-          </span>
-          <ChevronRight size={14} color="#A855F7" />
-        </div>
-
-        {/* Headline */}
-        <h1 style={{
-          maxWidth: "900px",
-          margin: "0 auto 1.5rem",
-          animation: "fadeIn 0.6s 0.1s ease-out both",
-        }}>
-          Master DSA & <span className="gradient-text">Crack Your Dream</span> FAANG Role
-        </h1>
-
-        <p style={{
-          fontSize: "clamp(1rem, 2vw, 1.25rem)",
-          color: "var(--text-muted)",
-          maxWidth: "600px",
-          margin: "0 auto 2.5rem",
-          animation: "fadeIn 0.6s 0.2s ease-out both",
-        }}>
-          Learn concepts step-by-step, track problems from 5 popular sheets (Love Babbar, Blind 75, Striver, GFG, Google), and get real-time AI coding hints.
-        </p>
-
-        {/* CTA buttons */}
-        <div style={{
-          display: "flex",
-          gap: "1rem",
-          justifyContent: "center",
-          flexWrap: "wrap",
-          animation: "fadeIn 0.6s 0.3s ease-out both",
-        }}>
-          <Link href="/auth/signup" className="btn btn-primary btn-xl">
-            <Zap size={18} />
-            Start Practicing Free
-          </Link>
-          <Link href="/courses" className="btn btn-secondary btn-xl">
-            <Play size={18} />
-            Explore DSA Roadmap
-          </Link>
-        </div>
-
-        {/* Social proof */}
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "2rem",
-          marginTop: "3rem",
-          flexWrap: "wrap",
-          animation: "fadeIn 0.6s 0.4s ease-out both",
-        }}>
-          {[
-            { icon: <Users size={16} />, label: "12,400+ Students" },
-            { icon: <Star size={16} style={{ color: "#F59E0B" }} />, label: "4.9 Rating" },
-            { icon: <BookOpen size={16} />, label: "40+ Courses" },
-          ].map(({ icon, label }) => (
-            <div key={label} style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.4rem",
-              color: "var(--text-muted)",
-              fontSize: "0.9rem",
-            }}>
-              {icon}
-              <span>{label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Floating dashboard preview */}
-        <div className="animate-float" style={{
-          marginTop: "2.5rem",
-          display: "inline-block",
-          animation: "fadeIn 0.8s 0.5s ease-out both, float 4s 1.5s ease-in-out infinite",
-        }}>
-          <DashboardPreviewCard />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Mini Dashboard Preview ────────────────────────────────────
-function DashboardPreviewCard() {
-  return (
-    <div className="glass" style={{
-      borderRadius: "var(--radius-xl)",
-      padding: "1.5rem",
-      maxWidth: "600px",
-      textAlign: "left",
-      boxShadow: "0 30px 60px rgba(0,0,0,0.5), var(--shadow-glow)",
-    }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          {["#EF4444", "#F59E0B", "#10B981"].map((c) => (
-            <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />
-          ))}
-        </div>
-        <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-          eduvault/dashboard
-        </span>
-      </div>
-
-      {/* Stats row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem", marginBottom: "1rem" }}>
-        {[
-          { label: "XP Points", value: "2,840", color: "#F59E0B", icon: "⚡" },
-          { label: "Streak", value: "14 days", color: "#EF4444", icon: "🔥" },
-          { label: "Completed", value: "67%", color: "#10B981", icon: "✅" },
-        ].map(({ label, value, color, icon }) => (
-          <div key={label} style={{
-            background: "var(--bg-elevated)",
-            borderRadius: "var(--radius-md)",
-            padding: "0.75rem",
-            border: "1px solid var(--border-subtle)",
-          }}>
-            <div style={{ fontSize: "1.1rem", marginBottom: "0.2rem" }}>{icon}</div>
-            <div style={{ fontSize: "1rem", fontWeight: 700, color, fontFamily: "var(--font-display)" }}>{value}</div>
-            <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Active course */}
-      <div style={{
-        background: "var(--bg-elevated)",
-        borderRadius: "var(--radius-md)",
-        padding: "1rem",
-        border: "1px solid rgba(124,58,237,0.2)",
-        marginBottom: "0.75rem",
-      }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
-          <div>
-            <div style={{ fontSize: "0.8rem", color: "#A855F7", marginBottom: "0.2rem", fontWeight: 600 }}>CURRENTLY STUDYING</div>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "0.95rem" }}>DSA Masterclass</div>
-            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Chapter 4: Graph Algorithms</div>
-          </div>
-          <div style={{
-            padding: "0.3rem 0.7rem",
-            background: "rgba(16,185,129,0.1)",
-            color: "#34D399",
-            borderRadius: "var(--radius-full)",
-            fontSize: "0.7rem",
-            fontWeight: 600,
-          }}>
-            IN PROGRESS
-          </div>
-        </div>
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: "67%" }} />
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.4rem" }}>
-          <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>34 of 51 lessons</span>
-          <span style={{ fontSize: "0.72rem", color: "#A855F7", fontWeight: 600 }}>67%</span>
-        </div>
-      </div>
-
-      {/* AI Buddy chip */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.5rem",
-        padding: "0.6rem 1rem",
-        background: "rgba(124,58,237,0.1)",
-        border: "1px solid rgba(124,58,237,0.2)",
-        borderRadius: "var(--radius-md)",
-      }}>
-        <Brain size={14} color="#A855F7" />
-        <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-          AI Study Buddy: <span style={{ color: "#A855F7" }}>"Ready to help with Dijkstra's algorithm?"</span>
-        </span>
-      </div>
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.85 }}>
+        <defs>
+          <pattern
+            id="leetrunPatternId"
+            patternUnits="userSpaceOnUse"
+            width="80"
+            height="40"
+            patternTransform="scale(6.44444444444445) rotate(135)"
+          >
+            <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
+            <path
+              d="M-20.133 4.568C-13.178 4.932-6.452 7.376 0 10c6.452 2.624 13.036 5.072 20 5 6.967-.072 13.56-2.341 20-5 6.44-2.659 13.033-4.928 20-5 6.964-.072 13.548 2.376 20 5s13.178 5.068 20.133 5.432"
+              stroke="#e3e3e3"
+              strokeWidth="1"
+              fill="none"
+            />
+            <path
+              d="M-20.133 24.568C-13.178 24.932-6.452 27.376 0 30c6.452 2.624 13.036 5.072 20 5 6.967-.072 13.56-2.341 20-5 6.44-2.659 13.033-4.928 20-5 6.964-.072 13.548 2.376 20 5s13.178 5.068 20.133 5.432"
+              stroke="#ececec"
+              strokeWidth="1"
+              fill="none"
+            />
+          </pattern>
+          <mask id="leetrunFadeMask">
+            <linearGradient id="leetrunFadeGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="65%" stopColor="white" stopOpacity="1" />
+              <stop offset="100%" stopColor="white" stopOpacity="0" />
+            </linearGradient>
+            <rect width="100%" height="100%" fill="url(#leetrunFadeGradient)" />
+          </mask>
+        </defs>
+        <rect
+          width="100%"
+          height="100%"
+          fill="url(#leetrunPatternId)"
+          mask="url(#leetrunFadeMask)"
+        />
+      </svg>
     </div>
   );
 }
 
-// ─── Stats Section ─────────────────────────────────────────────
-function StatsSection() {
-  const stats = [
-    { value: "12,400+", label: "Active Students", icon: <Users size={24} /> },
-    { value: "40+", label: "Expert Courses", icon: <BookOpen size={24} /> },
-    { value: "94%", label: "Placement Rate", icon: <Trophy size={24} /> },
-    { value: "4.9★", label: "Average Rating", icon: <Star size={24} /> },
-  ];
-
+// ─── FAQ Component ───
+function FAQItem({ question, answer }: { question: string; answer: string }) {
+  const [isOpen, setIsOpen] = useState(false);
   return (
-    <section style={{ padding: "2.5rem 0", borderTop: "1px solid var(--border-subtle)", borderBottom: "1px solid var(--border-subtle)" }}>
-      <div className="container">
-        <div className="bento-grid bento-grid-4">
-          {stats.map(({ value, label, icon }) => (
-            <div key={label} className="stat-card" style={{ textAlign: "center", padding: "2rem" }}>
-              <div style={{ color: "#A855F7", marginBottom: "0.75rem", display: "flex", justifyContent: "center" }}>
-                {icon}
-              </div>
-              <div style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "2.2rem",
-                fontWeight: 800,
-                marginBottom: "0.25rem",
-              }} className="gradient-text">
-                {value}
-              </div>
-              <div style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Tracks Section ────────────────────────────────────────────
-const sheets = [
-  {
-    id: "sheets",
-    icon: <Terminal size={28} />,
-    color: "#06B6D4",
-    bg: "rgba(6,182,212,0.1)",
-    border: "rgba(6,182,212,0.2)",
-    title: "5 Curated DSA Sheets",
-    subtitle: "All top problem sets combined",
-    items: [
-      "Love Babbar 450 Sheet",
-      "LeetCode Blind 75 / Top 150",
-      "Striver A2Z SDE Sheet",
-      "GFG Must-Do Interview List",
-      "Google Top 100 Questions"
-    ],
-    badge: "Integrated Tracking",
-    badgeColor: "#06B6D4",
-  },
-  {
-    id: "ai-hints",
-    icon: <Brain size={28} />,
-    color: "#A855F7",
-    bg: "rgba(168,85,247,0.1)",
-    border: "rgba(168,85,247,0.2)",
-    title: "AI Study Buddy",
-    subtitle: "Your personal 24/7 coding tutor",
-    items: [
-      "Explains complex algorithms simply",
-      "Gives conceptual hints, never dry code",
-      "Analyzes logic & dry-runs edge cases",
-      "Helps debug compiler errors & TLEs"
-    ],
-    badge: "Smart Tutoring",
-    badgeColor: "#A855F7",
-  },
-  {
-    id: "analytics",
-    icon: <BarChart3 size={28} />,
-    color: "#10B981",
-    bg: "rgba(16,185,129,0.1)",
-    border: "rgba(16,185,129,0.2)",
-    title: "Placement Readiness",
-    subtitle: "Know exactly when you're ready",
-    items: [
-      "Topic-wise readiness score (%)",
-      "Target company requirements",
-      "Identifies weak areas to focus on",
-      "Weekly analytics & progress logs"
-    ],
-    badge: "Analytics",
-    badgeColor: "#10B981",
-  }
-];
-
-function TracksSection() {
-  return (
-    <section className="section">
-      <div className="container">
-        <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-          <div className="badge badge-violet" style={{ marginBottom: "1rem" }}>
-            <BookOpen size={12} /> Features
-          </div>
-          <h2>Built for <span className="gradient-text">FAANG Aspirants</span></h2>
-          <p style={{ maxWidth: "500px", margin: "1rem auto 0" }}>
-            Everything you need to practice, track, and master data structures and algorithms in one place.
-          </p>
-        </div>
-
-        <div className="bento-grid bento-grid-3" style={{ gap: "1.5rem" }}>
-          {sheets.map((sheet, i) => (
-            <div
-              key={sheet.id}
-              className="card"
-              style={{
-                padding: "2rem",
-                animationDelay: `${i * 0.1}s`,
-                border: `1px solid ${sheet.border}`,
-              }}
-            >
-              {/* Icon */}
-              <div style={{
-                width: 56,
-                height: 56,
-                background: sheet.bg,
-                border: `1px solid ${sheet.border}`,
-                borderRadius: "var(--radius-lg)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: sheet.color,
-                marginBottom: "1.25rem",
-              }}>
-                {sheet.icon}
-              </div>
-
-              {/* Badge */}
-              <div style={{
-                display: "inline-flex",
-                padding: "0.2rem 0.6rem",
-                background: `${sheet.badgeColor}20`,
-                color: sheet.badgeColor,
-                borderRadius: "var(--radius-full)",
-                fontSize: "0.7rem",
-                fontWeight: 700,
-                marginBottom: "0.75rem",
-                border: `1px solid ${sheet.badgeColor}40`,
-              }}>
-                {sheet.badge}
-              </div>
-
-              <h3 style={{ marginBottom: "0.25rem", fontSize: "1.3rem" }}>{sheet.title}</h3>
-              <p style={{ fontSize: "0.85rem", marginBottom: "1.5rem", color: "var(--text-muted)" }}>
-                {sheet.subtitle}
-              </p>
-
-              {/* Course list */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1.5rem" }}>
-                {sheet.items.map((item) => (
-                  <div key={item} style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    color: "var(--text-secondary)",
-                    fontSize: "0.85rem",
-                  }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: sheet.color }} />
-                    {item}
-                  </div>
-                ))}
-              </div>
-
-              <Link href="/courses" className="btn btn-secondary" style={{ width: "100%" }}>
-                Start Practicing <ArrowRight size={15} />
-              </Link>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── AI Features Section ───────────────────────────────────────
-function AIFeaturesSection() {
-  const features = [
-    {
-      icon: <Brain size={22} />,
-      color: "#A855F7",
-      title: "Concept Explanations",
-      desc: "Struggling to understand complex concepts like Segment Trees, Red-Black Trees, or Graph BFS/DFS? Ask the AI to break it down with simple analogies and dry-runs.",
-    },
-    {
-      icon: <Zap size={22} />,
-      color: "#F59E0B",
-      title: "Guided Hints (No Spoilers)",
-      desc: "Stuck on a LeetCode problem? Instead of reading the solution directly, ask the AI for a conceptual hint to guide your logic without giving away the code.",
-    },
-    {
-      icon: <BarChart3 size={22} />,
-      color: "#06B6D4",
-      title: "Debugging & TLE Assistance",
-      desc: "Paste your code and explain your approach. The AI points out dry-run edge cases, explains why you might get TLE (Time Limit Exceeded), and helps optimize complexity.",
-    },
-    {
-      icon: <Cpu size={22} />,
-      color: "#10B981",
-      title: "Concept Quizzes",
-      desc: "Quick conceptual quizzes generated directly from the DSA lessons to verify your theoretical understanding of algorithms before writing any code.",
-    },
-  ];
-
-  return (
-    <section className="section" style={{ background: "linear-gradient(180deg, transparent, rgba(124,58,237,0.05), transparent)" }}>
-      <div className="container">
-        <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-          <div className="badge badge-pink" style={{ marginBottom: "1rem" }}>
-            <Sparkles size={12} /> AI-Powered
-          </div>
-          <h2>Not Just Videos. <span className="gradient-text">Intelligent Learning.</span></h2>
-          <p style={{ maxWidth: "550px", margin: "1rem auto 0" }}>
-            Every feature is built around helping you understand faster, retain longer, and get feedback you'd only get from a personal tutor.
-          </p>
-        </div>
-
-        <div className="bento-grid bento-grid-2" style={{ gap: "1.5rem" }}>
-          {features.map((f, i) => (
-            <div key={f.title} className="card" style={{ padding: "2rem", display: "flex", gap: "1.25rem" }}>
-              <div style={{
-                width: 48, height: 48, flexShrink: 0,
-                background: `${f.color}15`,
-                border: `1px solid ${f.color}30`,
-                borderRadius: "var(--radius-md)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: f.color,
-              }}>
-                {f.icon}
-              </div>
-              <div>
-                <h4 style={{ marginBottom: "0.5rem" }}>{f.title}</h4>
-                <p style={{ fontSize: "0.875rem", lineHeight: 1.6 }}>{f.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Gamification Section ──────────────────────────────────────
-function GamificationSection() {
-  const badges_list = [
-    { icon: "🔥", name: "7-Day Streak", rarity: "RARE", color: "#EF4444" },
-    { icon: "🧠", name: "ML Pioneer", rarity: "EPIC", color: "#A855F7" },
-    { icon: "⚔️", name: "DSA Warrior", rarity: "LEGENDARY", color: "#F59E0B" },
-    { icon: "🚀", name: "First Deploy", rarity: "COMMON", color: "#06B6D4" },
-    { icon: "💯", name: "Perfect Score", rarity: "RARE", color: "#10B981" },
-    { icon: "🏆", name: "Course Legend", rarity: "LEGENDARY", color: "#EC4899" },
-  ];
-
-  return (
-    <section className="section">
-      <div className="container">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5rem", alignItems: "center" }}>
-          {/* Left */}
-          <div>
-            <div className="badge badge-amber" style={{ marginBottom: "1rem" }}>
-              <Trophy size={12} /> Gamification
-            </div>
-            <h2 style={{ marginBottom: "1rem" }}>
-              Learning that feels like a{" "}
-              <span className="gradient-text-warm">Game</span>
-            </h2>
-            <p style={{ marginBottom: "2rem" }}>
-              XP points, daily streaks, achievement badges, leaderboards — because motivation
-              shouldn't be a chore. Every lesson completed, every quiz passed, every streak maintained gets you closer to becoming a Legend.
-            </p>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {[
-                { icon: <Flame size={18} />, color: "#EF4444", title: "Daily Streaks", desc: "25 XP bonus for every day you study" },
-                { icon: <Trophy size={18} />, color: "#F59E0B", title: "Achievement Badges", desc: "12 unique badges across 4 rarity tiers" },
-                { icon: <BarChart3 size={18} />, color: "#A855F7", title: "XP Leaderboard", desc: "Compete weekly with other students" },
-              ].map(({ icon, color, title, desc }) => (
-                <div key={title} style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-                  <div style={{
-                    width: 40, height: 40, flexShrink: 0,
-                    background: `${color}15`,
-                    borderRadius: "var(--radius-md)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color,
-                  }}>
-                    {icon}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: "0.95rem", marginBottom: "0.2rem" }}>{title}</div>
-                    <div style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>{desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: Badge showcase */}
-          <div className="card-elevated" style={{ padding: "2rem" }}>
-            <div style={{ marginBottom: "1.5rem" }}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, marginBottom: "0.25rem" }}>
-                Your Achievements
-              </div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>6 of 12 badges earned</div>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem", marginBottom: "1.5rem" }}>
-              {badges_list.map((b) => (
-                <div key={b.name} style={{
-                  padding: "1rem 0.75rem",
-                  background: "var(--bg-base)",
-                  borderRadius: "var(--radius-md)",
-                  border: `1px solid ${b.color}30`,
-                  textAlign: "center",
-                  cursor: "default",
-                  transition: "all 0.2s",
-                }}>
-                  <div style={{ fontSize: "1.75rem", marginBottom: "0.3rem" }}>{b.icon}</div>
-                  <div style={{ fontSize: "0.7rem", fontWeight: 700, color: b.color, marginBottom: "0.1rem" }}>{b.rarity}</div>
-                  <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>{b.name}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* XP Bar */}
-            <div style={{ marginBottom: "0.5rem", display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>⚡ Level 7 — Scholar</span>
-              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>2,840 / 3,000 XP</span>
-            </div>
-            <div className="xp-bar">
-              <div className="xp-fill" style={{ width: "94%" }} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Testimonials ──────────────────────────────────────────────
-const testimonials = [
-  {
-    name: "Arjun Sharma",
-    role: "SDE @ Amazon",
-    avatar: "AS",
-    color: "#06B6D4",
-    text: "The DSA Masterclass + AI Study Buddy combo is insane. I went from struggling with graphs to solving Leetcode hard in 6 weeks. The personalized roadmap actually worked.",
-  },
-  {
-    name: "Priya Nair",
-    role: "ML Engineer @ Swiggy",
-    avatar: "PN",
-    color: "#A855F7",
-    text: "I was intimidated by transformers. The AI Study Buddy explained attention mechanisms 4 different ways until I got it. This isn't content — it's actual learning.",
-  },
-  {
-    name: "Rohan Verma",
-    role: "Fullstack Dev @ Razorpay",
-    avatar: "RV",
-    color: "#10B981",
-    text: "Built my first production Next.js app 2 months into the course. The curriculum is actually up-to-date — not 5-year-old tutorials. Placement was direct from here.",
-  },
-];
-
-function TestimonialsSection() {
-  return (
-    <section className="section" style={{ background: "linear-gradient(180deg, transparent, rgba(124,58,237,0.03), transparent)" }}>
-      <div className="container">
-        <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-          <div className="badge badge-green" style={{ marginBottom: "1rem" }}>
-            <Star size={12} /> Student Stories
-          </div>
-          <h2>They learned here. <span className="gradient-text">They got placed.</span></h2>
-        </div>
-
-        <div className="bento-grid bento-grid-3" style={{ gap: "1.5rem" }}>
-          {testimonials.map((t) => (
-            <div key={t.name} className="card" style={{ padding: "1.75rem" }}>
-              <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
-                {[1,2,3,4,5].map((s) => (
-                  <Star key={s} size={14} fill="#F59E0B" color="#F59E0B" />
-                ))}
-              </div>
-              <p style={{ fontSize: "0.9rem", marginBottom: "1.5rem", lineHeight: 1.7 }}>"{t.text}"</p>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <div className="avatar-fallback" style={{ width: 40, height: 40, background: `${t.color}20`, color: t.color, fontSize: "0.8rem", border: `1px solid ${t.color}40` }}>
-                  {t.avatar}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{t.name}</div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{t.role}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── CTA Section ───────────────────────────────────────────────
-function CTASection() {
-  return (
-    <section style={{ padding: "3.5rem 0" }}>
-      <div className="container">
-        <div style={{
-          background: "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(236,72,153,0.1))",
-          border: "1px solid rgba(124,58,237,0.3)",
-          borderRadius: "var(--radius-xl)",
-          padding: "2.5rem",
-          textAlign: "center",
-          position: "relative",
-          overflow: "hidden",
-        }}>
-          {/* Glow */}
-          <div style={{
-            position: "absolute",
-            top: "50%", left: "50%",
-            transform: "translate(-50%,-50%)",
-            width: "500px", height: "300px",
-            background: "radial-gradient(ellipse, rgba(124,58,237,0.2), transparent)",
-            pointerEvents: "none",
-          }} />
-
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🚀</div>
-            <h2 style={{ marginBottom: "1rem" }}>
-              Ready to become <span className="gradient-text">unstoppable?</span>
-            </h2>
-            <p style={{ maxWidth: "500px", margin: "0 auto 2.5rem", color: "var(--text-muted)" }}>
-              Join 12,400+ students already building their future.
-              First month is completely free — no card required.
-            </p>
-            <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
-              <Link href="/auth/signup" className="btn btn-primary btn-xl">
-                <Zap size={18} /> Create Free Account
-              </Link>
-              <Link href="/courses" className="btn btn-secondary btn-xl">
-                Browse Courses <ArrowRight size={18} />
-              </Link>
-            </div>
-            <div style={{ marginTop: "1.5rem", display: "flex", justifyContent: "center", gap: "2rem" }}>
-              {["No credit card", "Cancel anytime", "40+ courses"].map((t) => (
-                <div key={t} style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                  <Shield size={13} color="#10B981" /> {t}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Footer ────────────────────────────────────────────────────
-function Footer() {
-  return (
-    <footer style={{
-      borderTop: "1px solid var(--border-subtle)",
-      padding: "2rem 0",
+    <div style={{
+      background: "#FFFFFF",
+      border: "1px solid #E2E8F0",
+      borderRadius: "12px",
+      marginBottom: "0.85rem",
+      overflow: "hidden",
+      transition: "all 0.2s ease",
     }}>
-      <div className="container">
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "3rem", marginBottom: "3rem" }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1rem" }}>
-              <div style={{
-                width: 32, height: 32,
-                background: "linear-gradient(135deg, #7C3AED, #EC4899)",
-                borderRadius: 8,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <GraduationCap size={16} color="white" />
-              </div>
-              <span style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-                Edu<span className="gradient-text">Vault</span>
-              </span>
-            </div>
-            <p style={{ fontSize: "0.85rem", maxWidth: "260px" }}>
-              The platform where college students become industry-ready engineers.
-            </p>
-          </div>
-          {[
-            { title: "Learn", links: ["Arrays & Strings", "Linked Lists", "Trees & Graphs", "Dynamic Programming"] },
-            { title: "Platform", links: ["Dashboard", "Roadmaps", "Community", "Certificates"] },
-            { title: "Company", links: ["About", "Blog", "Careers", "Contact"] },
-          ].map(({ title, links }) => (
-            <div key={title}>
-              <div style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: "1rem" }}>{title}</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {links.map((l) => (
-                  <Link key={l} href="#" style={{ fontSize: "0.85rem", color: "var(--text-muted)", textDecoration: "none" }}>
-                    {l}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "1.1rem 1.4rem",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <span style={{ fontWeight: 700, fontSize: "0.92rem", color: "#1A1B23" }}>{question}</span>
+        {isOpen ? <Minus size={16} color="#6366F1" /> : <Plus size={16} color="#94A3B8" />}
+      </button>
+      {isOpen && (
+        <div style={{
+          padding: "0 1.4rem 1.25rem",
+          fontSize: "0.86rem",
+          color: "#475569",
+          lineHeight: 1.6,
+          borderTop: "1px solid #F1F5F9",
+          paddingTop: "0.85rem",
+        }}>
+          {answer}
         </div>
-        <div className="divider" style={{ marginBottom: "1.5rem" }} />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "0.8rem", color: "var(--text-disabled)" }}>
-            © 2025 EduVault. Built for hustlers.
-          </span>
-          <div style={{ display: "flex", gap: "1.5rem" }}>
-            {["Privacy", "Terms", "Cookies"].map((t) => (
-              <Link key={t} href="#" style={{ fontSize: "0.8rem", color: "var(--text-disabled)", textDecoration: "none" }}>
-                {t}
+      )}
+    </div>
+  );
+}
+
+export default function LandingPage() {
+  const [email, setEmail] = useState("");
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    toast.success("Subscribed to updates! 🚀");
+    setEmail("");
+  };
+
+  const sheetsMock = [
+    { name: "Striver SDE Sheet", desc: "Striver · takeUforward", color: "#3B82F6" },
+    { name: "Striver A2Z Sheet", desc: "Striver · takeUforward", color: "#10B981" },
+    { name: "Striver 79 (Last Moment)", desc: "Striver · takeUforward", color: "#6366F1" },
+    { name: "Love Babbar 450", desc: "Love Babbar · 450 DSA", color: "#F59E0B" },
+    { name: "NeetCode 150", desc: "NeetCode · Patterns", color: "#EC4899" },
+    { name: "Blind 75", desc: "Community · Classic", color: "#8B5CF6" },
+    { name: "Google Top 100", desc: "Company-wise · Targeted", color: "#3B82F6" },
+    { name: "Amazon Top 100", desc: "Company-wise · Targeted", color: "#FF9900" },
+  ];
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#FAFBFA",
+      color: "#1A1B23",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      position: "relative",
+      overflowX: "hidden",
+    }}>
+      {/* Wave Grid Pattern */}
+      <LeetRunBackground />
+
+      {/* ─── FLOATING PILL NAVBAR ─── */}
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        padding: "1.5rem 1rem 0",
+        position: "relative",
+        zIndex: 50,
+      }}>
+        <nav style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+          minWidth: "min(880px, 94vw)",
+          background: "#1A1B23",
+          padding: "0.75rem 1.6rem",
+          borderRadius: "99px",
+          boxShadow: "0 10px 30px rgba(26,27,35,0.18)",
+        }}>
+          {/* Logo */}
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.6rem", textDecoration: "none" }}>
+            <div style={{
+              width: 30, height: 30,
+              background: "linear-gradient(135deg, #6366F1, #EC4899)",
+              borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <GraduationCap size={16} color="white" />
+            </div>
+            <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "#FFFFFF", letterSpacing: "-0.01em" }}>
+              EduVault
+            </span>
+          </Link>
+
+          {/* Menu Items */}
+          <div style={{ display: "flex", gap: "1.75rem", alignItems: "center" }}>
+            {[
+              { label: "Features", href: "#features" },
+              { label: "Sheets", href: "/auth/signup" },
+              { label: "Patterns", href: "/auth/signup" },
+              { label: "Analytics", href: "/auth/signup" },
+              { label: "Flashcards", href: "/auth/signup" },
+              { label: "Lobbies", href: "/auth/signup" },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                style={{
+                  fontSize: "0.85rem",
+                  color: "#E2E8F0",
+                  textDecoration: "none",
+                  fontWeight: 600,
+                  transition: "color 0.15s",
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = "#818CF8"}
+                onMouseLeave={(e) => e.currentTarget.style.color = "#E2E8F0"}
+              >
+                {item.label}
               </Link>
             ))}
           </div>
-        </div>
-      </div>
-    </footer>
-  );
-}
 
-// ─── Page ──────────────────────────────────────────────────────
-export default function LandingPage() {
-  return (
-    <main>
-      <Navbar />
-      <Hero />
-      <StatsSection />
-      <TracksSection />
-      <AIFeaturesSection />
-      <GamificationSection />
-      <TestimonialsSection />
-      <CTASection />
-      <Footer />
-    </main>
+          {/* Actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
+            <Link
+              href="/auth/login"
+              style={{ fontSize: "0.85rem", color: "#FFFFFF", textDecoration: "none", fontWeight: 700 }}
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/auth/signup"
+              style={{
+                fontSize: "0.85rem",
+                color: "#1A1B23",
+                background: "#FFFFFF",
+                padding: "0.55rem 1.25rem",
+                borderRadius: "99px",
+                textDecoration: "none",
+                fontWeight: 700,
+                transition: "opacity 0.15s",
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = "0.9"}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+            >
+              Get Started
+            </Link>
+          </div>
+        </nav>
+      </div>
+
+      {/* ─── HERO SECTION ─── */}
+      <section style={{
+        padding: "8.5rem 1rem 4.5rem",
+        textAlign: "center",
+        position: "relative",
+        zIndex: 10,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}>
+        {/* Badge */}
+        <div style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          padding: "0.45rem 1rem",
+          background: "#FFFFFF",
+          border: "1px solid #E2E8F0",
+          borderRadius: "99px",
+          color: "#475569",
+          fontSize: "0.82rem",
+          fontWeight: 700,
+          marginBottom: "1.75rem",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+        }}>
+          <Sparkles size={14} color="#6366F1" />
+          EduVault - DSA Placement Prep
+        </div>
+
+        {/* Headline */}
+        <h1 style={{
+          fontSize: "clamp(2.6rem, 6.2vw, 4.4rem)",
+          fontWeight: 800,
+          color: "#1A1B23",
+          lineHeight: 1.12,
+          maxWidth: "880px",
+          margin: "0 0 1.5rem",
+          letterSpacing: "-0.025em",
+        }}>
+          Meet the new home <br /> for your Placement Prep
+        </h1>
+
+        {/* Subheading */}
+        <p style={{
+          fontSize: "clamp(1.05rem, 2.2vw, 1.3rem)",
+          color: "#475569",
+          lineHeight: 1.65,
+          maxWidth: "640px",
+          margin: "0 0 2.5rem",
+        }}>
+          Curated sheets, interview patterns, deep LeetCode sync, and an AI mentor that roasts you all the way to your dream offer.
+        </p>
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "3.5rem" }}>
+          <Link
+            href="/auth/signup"
+            style={{
+              padding: "0.85rem 1.8rem",
+              borderRadius: "10px",
+              background: "#1A1B23",
+              color: "#FFFFFF",
+              fontSize: "0.92rem",
+              fontWeight: 700,
+              textDecoration: "none",
+              boxShadow: "0 8px 24px rgba(26,27,35,0.12)",
+              transition: "transform 0.15s",
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"}
+            onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+          >
+            Get Started Free
+          </Link>
+          <Link
+            href="/auth/login"
+            style={{
+              padding: "0.85rem 1.8rem",
+              borderRadius: "10px",
+              background: "#FFFFFF",
+              color: "#1A1B23",
+              fontSize: "0.92rem",
+              fontWeight: 700,
+              textDecoration: "none",
+              border: "1px solid #D1D5DB",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = "#F9FAFB"}
+            onMouseLeave={(e) => e.currentTarget.style.background = "#FFFFFF"}
+          >
+            Sign In
+          </Link>
+        </div>
+
+        {/* Category links */}
+        <div style={{ display: "flex", gap: "0.85rem", alignItems: "center", flexWrap: "wrap", justifyContent: "center", marginBottom: "5rem" }}>
+          <span style={{ fontSize: "0.82rem", color: "#64748B", fontWeight: 700 }}>Explore free:</span>
+          {[
+            { label: "Sheets", icon: <Layers size={13.5} /> },
+            { label: "Lobbies", icon: <Users size={13.5} /> },
+            { label: "Flashcards", icon: <Brain size={13.5} /> },
+          ].map((tag) => (
+            <Link
+              key={tag.label}
+              href="/auth/signup"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.4rem",
+                padding: "0.45rem 1rem",
+                borderRadius: "99px",
+                border: "1px solid #E2E8F0",
+                background: "#FFFFFF",
+                color: "#475569",
+                fontSize: "0.82rem",
+                fontWeight: 600,
+                textDecoration: "none",
+                transition: "all 0.15s",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#6366F1";
+                e.currentTarget.style.color = "#6366F1";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "#E2E8F0";
+                e.currentTarget.style.color = "#475569";
+              }}
+            >
+              {tag.icon}
+              {tag.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* ─── SCREENSHOT 1: AUTO-TRACK SHEETS CONTAINER ─── */}
+        <div style={{
+          width: "100%",
+          maxWidth: "880px",
+          background: "#FFFFFF",
+          border: "1px solid #E2E8F0",
+          borderRadius: "24px",
+          padding: "2rem 2.25rem",
+          boxShadow: "0 15px 40px rgba(0, 0, 0, 0.04)",
+          textAlign: "left",
+          marginBottom: "2rem",
+        }}>
+          {/* Header */}
+          <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start", marginBottom: "2rem" }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: "50%",
+              background: "rgba(99,102,241,0.08)", color: "#6366F1",
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+            }}>
+              <RefreshCw size={18} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: "1.35rem", fontWeight: 800, color: "#1A1B23", margin: "0 0 0.25rem" }}>
+                Auto-track every sheet
+              </h2>
+              <p style={{ fontSize: "0.86rem", color: "#64748B", margin: 0 }}>
+                Deep Sync imports your LeetCode history and automatically checks them off across all your sheets.
+              </p>
+            </div>
+          </div>
+
+          {/* Sheets Grid */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: "0.85rem",
+            marginBottom: "1.5rem"
+          }}>
+            {sheetsMock.map((sheet) => (
+              <div
+                key={sheet.name}
+                style={{
+                  padding: "1rem 1.2rem",
+                  background: "#FAFBFA",
+                  border: "1px solid #E2E8F0",
+                  borderRadius: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  transition: "border-color 0.15s",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = sheet.color}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = "#E2E8F0"}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
+                    <BookOpen size={13} color={sheet.color} />
+                    <span style={{ fontSize: "0.82rem", fontWeight: 850, color: "#1A1B23" }}>{sheet.name}</span>
+                  </div>
+                  <span style={{ fontSize: "0.7rem", color: "#94A3B8", marginTop: "0.15rem", display: "block" }}>{sheet.desc}</span>
+                </div>
+                <ArrowRight size={13} color="#94A3B8" />
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom status checks */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "1.5rem",
+            flexWrap: "wrap",
+            borderTop: "1px solid #F1F5F9",
+            paddingTop: "1rem",
+            fontSize: "0.78rem",
+            color: "#64748B",
+            fontWeight: 600,
+          }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>🟢 Auto-checks solved problems</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>📘 Curated + company-wise</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>⚡ Guest preview shows sample progress</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── WHY SECTION (SCREENSHOT 1 BOTTOM 3x2 GRID) ─── */}
+      <section id="features" style={{
+        padding: "6rem 1rem",
+        background: "#F8FAFC",
+        borderTop: "1px solid #E2E8F0",
+        borderBottom: "1px solid #E2E8F0",
+        position: "relative",
+        zIndex: 10,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}>
+        <div style={{ textAlign: "center", maxWidth: "800px", marginBottom: "4rem" }}>
+          <p style={{ color: "#4F46E5", fontSize: "0.82rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.6rem" }}>
+            Why EduVault?
+          </p>
+          <h2 style={{ fontSize: "clamp(2rem, 3.8vw, 2.8rem)", fontWeight: 800, color: "#1A1B23", lineHeight: 1.22, letterSpacing: "-0.02em" }}>
+            Your entire placement prep, <br /> in one dashboard.
+          </h2>
+          <p style={{ color: "#64748B", fontSize: "0.95rem", marginTop: "1rem", lineHeight: 1.65, maxWidth: "540px", margin: "1rem auto 0" }}>
+            Most trackers just count your solves. EduVault gives you curated sheets, active recall flashcards, 1v1 lobbies, and an AI Sensei that helps you optimize.
+          </p>
+        </div>
+
+        {/* 3x2 Features Grid */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: "1.5rem",
+          width: "100%",
+          maxWidth: "960px",
+          padding: "0 1rem",
+        }}>
+          {[
+            {
+              title: "Access every DSA sheet",
+              desc: "Open any curated or company sheet, see every problem with its LeetCode link, and track what's done - all in one place.",
+              icon: <Layers size={18} color="#6366F1" />,
+              bg: "rgba(99, 102, 241, 0.06)",
+            },
+            {
+              title: "Interview patterns & templates",
+              desc: "The patterns interviewers ask most, ranked by weightage, with ready-to-use boilerplate templates and pattern-wise practice problems.",
+              icon: <Code2 size={18} color="#06B6D4" />,
+              bg: "rgba(6, 182, 212, 0.06)",
+            },
+            {
+              title: "Deep LeetCode analytics",
+              desc: "Solve breakdowns, topic mastery, language stats, active heatmap, streaks, and levels - your whole prep, visualized.",
+              icon: <BarChart3 size={18} color="#10B981" />,
+              bg: "rgba(16, 185, 129, 0.06)",
+            },
+            {
+              title: "Competitive leaderboard",
+              desc: "Climb global rankings by XP, level, streak, solved counts, or LeetCode contest rating. Add friends for a private board.",
+              icon: <Trophy size={18} color="#F59E0B" />,
+              bg: "rgba(245, 158, 11, 0.06)",
+            },
+            {
+              title: "Group competitions & coding games",
+              desc: "Spin up multiplayer lobbies, invite your batch, and race through problems in real time. Mock contests and friendly rivalry built-in.",
+              icon: <Users size={18} color="#EC4899" />,
+              bg: "rgba(236, 72, 153, 0.06)",
+            },
+            {
+              title: "Adaptive quests & AI mentor",
+              desc: "Daily, weekly and custom revision quests auto-verified from your real solves, plus a savage AI mentor that roasts you back on track.",
+              icon: <Brain size={18} color="#8B5CF6" />,
+              bg: "rgba(139, 92, 246, 0.06)",
+            },
+          ].map((feat) => (
+            <div key={feat.title} style={{
+              background: "#FFFFFF",
+              border: "1px solid #E2E8F0",
+              borderRadius: "16px",
+              padding: "1.75rem",
+              transition: "transform 0.18s, box-shadow 0.18s",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.85rem",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-4px)";
+              e.currentTarget.style.boxShadow = "0 12px 20px rgba(0,0,0,0.04)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+            >
+              <div style={{
+                width: 38, height: 38, borderRadius: "10px",
+                background: feat.bg, display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {feat.icon}
+              </div>
+              <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "#1A1B23", margin: "0.25rem 0 0" }}>{feat.title}</h3>
+              <p style={{ fontSize: "0.82rem", color: "#64748B", lineHeight: 1.55, margin: 0 }}>{feat.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── SCREENSHOT 2: FAQs SECTION ─── */}
+      <section style={{
+        padding: "6rem 1rem 4rem",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        background: "#FFFFFF",
+      }}>
+        <div style={{ width: "100%", maxWidth: "800px" }}>
+          <p style={{ fontSize: "0.82rem", color: "#6366F1", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>
+            Frequently Asked Questions
+          </p>
+          <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "#1A1B23", marginBottom: "2rem" }}>
+            Still Curious? <br />We Got Answers.
+          </h2>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "0 1.25rem" }}>
+            <div>
+              <FAQItem
+                question="What exactly is EduVault, and how does it work?"
+                answer="EduVault is a gamified DSA placement platform built around curated sheets (Blind 75, NeetCode 150, Striver's A2Z, company sets), interview patterns ranked by weightage, and active recall flashcards. It syncs with your LeetCode profile and tracks solved counts automatically."
+              />
+              <FAQItem
+                question="Which DSA sheets and question banks are included?"
+                answer="Blind 75, NeetCode 150, Striver's SDE Sheet, Striver's A2Z, Love Babbar 450, and company-specific sets like Google and Amazon Top 100. You can pin focus sheets and progress is updated instantly."
+              />
+            </div>
+            <div>
+              <FAQItem
+                question="What is Deep LeetCode Sync?"
+                answer="Deep Sync imports your LeetCode solve history - every accepted problem, not only recent ones - and automatically checks them off across all of your sheets, also powering accurate quest verification."
+              />
+              <FAQItem
+                question="Does EduVault require a LeetCode Premium account?"
+                answer="No. EduVault works with any public LeetCode account. You connect your username during onboarding and EduVault automatically syncs your stats, submissions, and solved counts."
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SCREENSHOT 3: DARK FOOTER (WITH USER ID EMAIL) ─── */}
+      <footer style={{
+        background: "#16171E",
+        color: "#94A3B8",
+        padding: "4.5rem 1rem 3rem",
+        position: "relative",
+        zIndex: 10,
+        borderTop: "1px solid #232530",
+      }}>
+        <div style={{ maxWidth: "880px", margin: "0 auto" }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "1.5fr 1fr 1fr 1.5fr",
+            gap: "2.5rem",
+            marginBottom: "4rem",
+            textAlign: "left",
+          }}>
+            {/* Column 1: Intro */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+                <div style={{
+                  width: 24, height: 24,
+                  background: "linear-gradient(135deg, #6366F1, #EC4899)",
+                  borderRadius: "50%",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <GraduationCap size={12} color="white" />
+                </div>
+                <span style={{ fontWeight: 800, fontSize: "0.95rem", color: "#FFFFFF" }}>EduVault</span>
+              </div>
+              <p style={{ fontSize: "0.78rem", color: "#64748B", lineHeight: 1.55 }}>
+                Your gamified DSA preparation platform. Crack placements faster with AI-powered mentoring, active recall flashcards, and competitive coding rooms.
+              </p>
+            </div>
+
+            {/* Column 2: Product */}
+            <div>
+              <h4 style={{ fontSize: "0.82rem", fontWeight: 700, color: "#FFFFFF", marginBottom: "1rem" }}>PRODUCT</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", fontSize: "0.78rem" }}>
+                <Link href="#features" style={{ color: "#94A3B8", textDecoration: "none" }}>Features</Link>
+                <Link href="/auth/signup" style={{ color: "#94A3B8", textDecoration: "none" }}>Pricing</Link>
+                <Link href="#features" style={{ color: "#94A3B8", textDecoration: "none" }}>FAQs</Link>
+                <Link href="/dashboard/flashcards" style={{ color: "#94A3B8", textDecoration: "none" }}>Flashcards</Link>
+              </div>
+            </div>
+
+            {/* Column 3: Company */}
+            <div>
+              <h4 style={{ fontSize: "0.82rem", fontWeight: 700, color: "#FFFFFF", marginBottom: "1rem" }}>COMPANY</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", fontSize: "0.78rem" }}>
+                <Link href="/auth/login" style={{ color: "#94A3B8", textDecoration: "none" }}>Sign In</Link>
+                <Link href="/auth/signup" style={{ color: "#94A3B8", textDecoration: "none" }}>Sign Up</Link>
+                <Link href="/auth/login" style={{ color: "#94A3B8", textDecoration: "none" }}>Reset Password</Link>
+              </div>
+            </div>
+
+            {/* Column 4: Newsletter */}
+            <div>
+              <h4 style={{ fontSize: "0.82rem", fontWeight: 700, color: "#FFFFFF", marginBottom: "1rem" }}>STAY IN THE LOOP</h4>
+              <p style={{ fontSize: "0.78rem", color: "#64748B", marginBottom: "0.85rem", lineHeight: 1.5 }}>
+                Get placement tips, DSA strategies, and EduVault updates.
+              </p>
+              <form onSubmit={handleSubscribe} style={{ display: "flex", gap: "0.4rem" }}>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={{
+                    flex: 1,
+                    background: "#232530",
+                    border: "1px solid #2D303E",
+                    borderRadius: "6px",
+                    padding: "0.4rem 0.75rem",
+                    color: "#FFFFFF",
+                    fontSize: "0.78rem",
+                    outline: "none",
+                  }}
+                />
+                <button type="submit" style={{
+                  background: "#4F46E5",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: "6px",
+                  padding: "0 0.85rem",
+                  fontSize: "0.78rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}>
+                  Subscribe
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* Big Background Year Branding */}
+          <div style={{
+            fontSize: "clamp(2.5rem, 10vw, 7.5rem)",
+            fontWeight: 900,
+            color: "#1C1E26",
+            lineHeight: 1,
+            userSelect: "none",
+            marginBottom: "2rem",
+            letterSpacing: "-0.04em",
+          }}>
+            EduVault 2026
+          </div>
+
+          {/* Copyright info with custom email */}
+          <div style={{
+            borderTop: "1px solid #232530",
+            paddingTop: "1.5rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            fontSize: "0.74rem",
+            color: "#64748B",
+            flexWrap: "wrap",
+            gap: "1rem",
+          }}>
+            <span>© {new Date().getFullYear()} EduVault. All rights reserved.</span>
+            <div style={{ display: "flex", gap: "1.25rem" }}>
+              <span style={{ cursor: "pointer" }}>Privacy Policy</span>
+              <span style={{ cursor: "pointer" }}>Terms of Service</span>
+              <a href="mailto:vipuljain675@gmail.com" style={{ color: "#94A3B8", textDecoration: "none" }}>vipuljain675@gmail.com</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }

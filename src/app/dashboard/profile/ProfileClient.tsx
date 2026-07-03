@@ -93,7 +93,7 @@ export default function ProfileClient({ user, stats }: Props) {
   };
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", paddingBottom: "3rem" }}>
+    <div className="dashboard-page">
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-primary)" }}>👤 User Profile</h1>

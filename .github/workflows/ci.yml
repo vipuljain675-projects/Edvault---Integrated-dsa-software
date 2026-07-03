@@ -1,0 +1,40 @@
+name: EduVault CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality-gate:
+    name: Level 3 Quality Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run TypeScript Verification (Level 3 Quality Gate)
+        run: npx tsc --noEmit
+
+      - name: Run ESLint Checks
+        run: npm run lint
+
+      - name: Test Build Production Bundle
+        run: npm run build
+        env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/postgres" # Mock database URL for build validation

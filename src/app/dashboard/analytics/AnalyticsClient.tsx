@@ -195,7 +195,7 @@ export default function AnalyticsClient({ user, stats }: Props) {
   const selectedDateSolves = selectedDate ? getSolvesForDate(selectedDate) : [];
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", paddingBottom: "3rem" }}>
+    <div className="dashboard-page">
       {/* Page Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
@@ -228,7 +228,7 @@ export default function AnalyticsClient({ user, stats }: Props) {
         style={{
           padding: "1.5rem",
           display: "grid",
-          gridTemplateColumns: "220px 1fr",
+          gridTemplateColumns: "260px 1fr",
           gap: "2rem",
           alignItems: "center",
           marginBottom: "1.5rem",
@@ -496,7 +496,7 @@ export default function AnalyticsClient({ user, stats }: Props) {
       </div>
 
       {/* Two columns: Left is Language/Topic Mastery, Right is Recommended Problems */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: "1.5rem" }}>
         
         {/* Left: Languages & Topic Mastery */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>

@@ -109,7 +109,7 @@ export default function SheetDetailClient({ sheet, topics, solvedMap }: Props) {
   };
 
   return (
-    <div style={{ maxWidth: "960px", margin: "0 auto" }}>
+    <div className="dashboard-page animate-fade-in">
       {/* Back + Header */}
       <div style={{ marginBottom: "1.5rem" }}>
         <Link href="/dashboard/dsa" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", fontSize: "0.82rem", color: "var(--text-muted)", textDecoration: "none", marginBottom: "0.75rem" }}>

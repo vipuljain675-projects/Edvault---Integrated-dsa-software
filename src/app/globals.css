@@ -434,6 +434,39 @@ code, pre, kbd {
   padding: 3.5rem 0;
 }
 
+/* ─── Dashboard Content Width ─────────────────────────────── */
+.dashboard-main {
+  flex: 1;
+  padding: clamp(1.25rem, 1.7vw, 2rem);
+  overflow-y: auto;
+}
+
+.dashboard-page {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0;
+  padding-bottom: 3rem;
+}
+
+.dashboard-page-narrow {
+  width: 100%;
+  max-width: 980px;
+  margin: 0;
+  padding-bottom: 4rem;
+}
+
+@media (max-width: 1180px) {
+  .dashboard-page {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-main {
+    padding: 1rem;
+  }
+}
+
 /* ─── Sidebar ─────────────────────────────────────────────── */
 .sidebar {
   width: 260px;
@@ -1164,4 +1197,3 @@ code, pre, kbd {
     grid-template-columns: 1fr;
   }
 }
-

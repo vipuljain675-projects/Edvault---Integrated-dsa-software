@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { recalculateUserStreak } from "@/lib/streak";
 
 // Returns fresh user stats (streak, xp, level) for the topbar
 export async function GET() {
@@ -8,6 +9,8 @@ export async function GET() {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  await recalculateUserStreak(session.user.id);
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },

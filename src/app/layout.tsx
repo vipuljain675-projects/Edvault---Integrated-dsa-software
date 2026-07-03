@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+import { Analytics } from "@vercel/analytics/react";
 import SessionProvider from "@/components/auth/SessionProvider";
 import { auth } from "@/lib/auth";
 
@@ -54,6 +55,7 @@ export default async function RootLayout({
               },
             }}
           />
+          <Analytics />
         </SessionProvider>
       </body>
     </html>

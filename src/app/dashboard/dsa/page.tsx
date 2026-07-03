@@ -5,55 +5,55 @@ import DSASheetsClient from "./DSASheetsClient";
 
 export const metadata = { title: "DSA Sheets — EduVault" };
 
-// Sheet definitions (same as LeetRun style)
+// Sheet definitions — real problem sets synced with dsa-seed.ts
 export const SHEETS = [
   {
     id: "BLIND_75",
     name: "Blind 75",
-    description: "The original curated list of 75 must-know LeetCode problems, compiled by a Facebook engineer. The gold standard for SWE interviews.",
+    description: "The original curated list of 75 must-know LeetCode problems, compiled by a Facebook engineer. The absolute gold standard for SWE interviews — every problem is a pattern, not just a problem.",
     icon: "👁️",
     color: "#6366F1",
-    sections: 10,
+    sections: 15,
   },
   {
     id: "NEETCODE_150",
     name: "NeetCode 150",
-    description: "Blind 75 plus 75 more problems, curated by NeetCode to cover every important interview pattern comprehensively.",
+    description: "NeetCode's extended 150-problem roadmap — Blind 75 + 75 additional problems meticulously chosen to cover every real interview pattern. Comes with free video solutions for every problem.",
     icon: "🎯",
     color: "#7C3AED",
-    sections: 18,
+    sections: 15,
   },
   {
     id: "STRIVER_SDE",
     name: "Striver's SDE Sheet",
-    description: "191 handpicked problems by Striver covering all SDE interview topics. The most popular sheet among Indian college students.",
+    description: "191 handpicked problems by Striver (TakeUForward) that every SDE candidate must solve. The most popular structured sheet among Indian CS students targeting top product companies.",
     icon: "⚡",
     color: "#0EA5E9",
-    sections: 28,
+    sections: 15,
   },
   {
     id: "STRIVER_A2Z",
     name: "Striver's A2Z DSA Sheet",
-    description: "A comprehensive 455-problem sheet from Striver covering everything from basics to advanced. Perfect for beginners.",
+    description: "The most comprehensive free DSA roadmap — covers everything from basics to advanced patterns across 15 topics. Ideal for complete beginners to build a rock-solid DSA foundation from scratch.",
     icon: "🚀",
     color: "#10B981",
-    sections: 58,
+    sections: 15,
   },
   {
     id: "LOVE_BABBAR",
-    name: "Love Babbar DSA Sheet",
-    description: "The most popular DSA sheet in India by Love Babbar, covering 450 problems across every topic for FAANG and product companies.",
+    name: "Love Babbar 450",
+    description: "The most popular 450-problem sheet in India. Covers arrays, strings, linked lists, trees, graphs, DP and every important pattern needed for FAANG, MAANG, and top product company interviews.",
     icon: "💛",
     color: "#F59E0B",
-    sections: 19,
+    sections: 15,
   },
   {
     id: "GOOGLE_100",
     name: "Google Top 100",
-    description: "Top 100 problems frequently asked in Google interviews, covering arrays, trees, graphs, DP, and design.",
+    description: "100 problems most frequently asked in Google technical interviews — curated from real interview reports. Focus on arrays, trees, graphs, DP, and system design. High signal-to-noise ratio.",
     icon: "🔵",
     color: "#3B82F6",
-    sections: 12,
+    sections: 15,
   },
 ];
 

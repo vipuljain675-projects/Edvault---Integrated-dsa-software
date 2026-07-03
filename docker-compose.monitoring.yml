@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # 1. Main Next.js Web App Container
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://dbadmin:postgres@postgres:5432/eduvault
+      - NEXTAUTH_SECRET=supersecretsecretkey
+    depends_on:
+      - postgres
+
+  # 2. Database container for local testing
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=dbadmin
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=eduvault
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # 3. Prometheus Metric Scraper
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - promdata:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    depends_on:
+      - app
+
+  # 4. Grafana Visual Dashboard Portal
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafanadata:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+  # 5. Host Metrics Exporter
+  node-exporter:
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
+
+volumes:
+  pgdata:
+  promdata:
+  grafanadata:

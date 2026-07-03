@@ -134,7 +134,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", paddingBottom: "4rem" }}>
+    <div className="dashboard-page-narrow">
       {/* Title */}
       <div style={{ marginBottom: "2rem" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>

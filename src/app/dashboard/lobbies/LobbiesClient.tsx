@@ -83,7 +83,7 @@ export default function LobbiesClient({ initialLobbies }: Props) {
   };
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", paddingBottom: "3rem" }}>
+    <div className="dashboard-page animate-fade-in">
       {/* Title */}
       <div style={{ marginBottom: "2rem" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>

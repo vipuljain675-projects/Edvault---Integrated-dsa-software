@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eduvault-deployment
+  labels:
+    app: eduvault
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: eduvault
+  template:
+    metadata:
+      labels:
+        app: eduvault
+    spec:
+      containers:
+        - name: eduvault-app
+          image: vipuljain675/eduvault:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3005
+          resources:
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: eduvault-secrets
+                  key: database-url
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: eduvault-secrets
+                  key: nextauth-secret
+          livenessProbe:
+            httpGet:
+              path: /api/user/stats
+              port: 3005
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /api/user/stats
+              port: 3005
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eduvault-service
+spec:
+  selector:
+    app: eduvault
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3005
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: eduvault-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  rules:
+    - host: eduvault.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eduvault-service
+                port:
+                  number: 80

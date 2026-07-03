@@ -78,7 +78,7 @@ export default function LobbyRoomClient({ lobby, members, activities }: Props) {
   ];
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", paddingBottom: "3rem" }}>
+    <div className="dashboard-page">
       {/* Back to lobbies link */}
       <Link href="/dashboard/lobbies" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", fontSize: "0.82rem", color: "var(--text-muted)", textDecoration: "none", marginBottom: "1rem" }}>
         <ArrowLeft size={14} /> Back to Lobbies

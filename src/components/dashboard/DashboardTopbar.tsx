@@ -101,8 +101,10 @@ export default function DashboardTopbar({ user: initialUser }: Props) {
     if (pathname === "/dashboard") return "Dashboard";
     if (pathname.startsWith("/dashboard/analytics")) return "Analytics";
     if (pathname.startsWith("/dashboard/dsa")) return "DSA Sheets";
-    if (pathname.startsWith("/dashboard/roadmap")) return "AI Roadmap";
+    if (pathname.startsWith("/dashboard/leaderboard")) return "Leaderboard";
+    if (pathname.startsWith("/dashboard/roadmap")) return "Sensei";
     if (pathname.startsWith("/dashboard/lobbies")) return "Lobbies";
+    if (pathname.startsWith("/dashboard/flashcards")) return "Flashcards";
     if (pathname.startsWith("/dashboard/profile")) return "Profile";
     if (pathname.startsWith("/dashboard/settings")) return "Settings";
     return "Dashboard";
