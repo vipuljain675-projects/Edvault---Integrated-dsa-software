@@ -93,11 +93,12 @@ ${userContext}
         },
         body: JSON.stringify({
           contents: formattedContents,
-          systemInstruction: {
+          // Correct key for Gemini REST API is system_instruction, not systemInstruction
+          system_instruction: {
             parts: [{ text: systemPrompt }]
           },
           generationConfig: {
-            maxOutputTokens: 1000,
+            maxOutputTokens: 1500, // Increased max output tokens for full code solutions
             temperature: 0.7,
           },
         }),

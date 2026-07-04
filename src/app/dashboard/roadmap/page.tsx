@@ -44,6 +44,90 @@ function TypingDots() {
   );
 }
 
+// ─── Format Message Content (Bolding & Code Blocks) ───────────
+function formatMessageContent(content: string) {
+  if (!content) return null;
+
+  // Split by code blocks using triple backticks
+  const parts = content.split(/```/);
+  return parts.map((part, index) => {
+    const isCode = index % 2 === 1;
+    if (isCode) {
+      // Extract language and code lines
+      const lines = part.split("\n");
+      const language = lines[0].trim() || "code";
+      const code = lines.slice(1).join("\n").trim();
+      return (
+        <div key={index} style={{
+          background: "#1E1E24",
+          borderRadius: "8px",
+          margin: "0.85rem 0",
+          border: "1px solid #2D2D35",
+          overflow: "hidden",
+          fontFamily: "'Fira Code', 'Courier New', Courier, monospace",
+        }}>
+          {/* Header */}
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "0.45rem 1rem",
+            background: "#16161C",
+            borderBottom: "1px solid #2D2D35",
+            fontSize: "0.75rem",
+            color: "#94A3B8",
+            fontWeight: 600,
+            textTransform: "uppercase",
+          }}>
+            <span>{language}</span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(code);
+                toast.success("Code copied to clipboard! 📋");
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#6366F1",
+                cursor: "pointer",
+                fontWeight: 700,
+                fontSize: "0.75rem",
+              }}
+            >
+              Copy
+            </button>
+          </div>
+          {/* Code pre body */}
+          <pre style={{
+            padding: "1rem",
+            margin: 0,
+            overflowX: "auto",
+            fontSize: "0.84rem",
+            color: "#E2E8F0",
+            lineHeight: 1.5,
+            whiteSpace: "pre",
+          }}>
+            <code>{code}</code>
+          </pre>
+        </div>
+      );
+    }
+
+    // Handle normal text and convert markdown bold (**text**) to bold tags
+    const textParts = part.split(/(\*\*.*?\*\*)/g);
+    return (
+      <span key={index} style={{ whiteSpace: "pre-line" }}>
+        {textParts.map((t, ti) => {
+          if (t.startsWith("**") && t.endsWith("**")) {
+            return <strong key={ti} style={{ fontWeight: 800, color: "var(--text-primary)" }}>{t.slice(2, -2)}</strong>;
+          }
+          return t;
+        })}
+      </span>
+    );
+  });
+}
+
 // ─── Main Component ──────────────────────────────────────────
 export default function SenseiPage() {
   const { data: session } = useSession();
@@ -184,13 +268,16 @@ export default function SenseiPage() {
                   border: isUser ? "none" : "1px solid var(--border-subtle)",
                   fontSize: "0.92rem",
                   lineHeight: 1.65,
-                  whiteSpace: "pre-line",
                   boxShadow: isUser
                     ? "0 4px 16px rgba(99,102,241,0.3)"
                     : "0 1px 4px rgba(0,0,0,0.06)",
                   maxWidth: "640px",
                 }}>
-                  {m.content}
+                  {isUser ? (
+                    <span style={{ whiteSpace: "pre-line" }}>{m.content}</span>
+                  ) : (
+                    formatMessageContent(m.content)
+                  )}
                 </div>
               </div>
 
