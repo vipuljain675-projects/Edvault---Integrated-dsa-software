@@ -1,0 +1,3 @@
+# EduVault SEO robots file
+User-agent: *
+Allow: /

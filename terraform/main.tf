@@ -171,7 +171,9 @@ resource "aws_ecs_task_definition" "task" {
       ]
       environment = [
         { name = "NODE_ENV", value = "production" },
-        { name = "DATABASE_URL", value = "postgresql://dbadmin:${var.db_password}@${aws_db_instance.db.endpoint}/eduvault" }
+        { name = "DATABASE_URL", value = "postgresql://dbadmin:${var.db_password}@${aws_db_instance.db.endpoint}/eduvault" },
+        { name = "AUTH_TRUST_HOST", value = "true" },
+        { name = "AUTH_SECRET", value = "supersecretsecretkey" }
       ]
     }
   ])

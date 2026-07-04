@@ -40,6 +40,13 @@ spec:
                 secretKeyRef:
                   name: eduvault-secrets
                   key: nextauth-secret
+            - name: AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: eduvault-secrets
+                  key: nextauth-secret
+            - name: AUTH_TRUST_HOST
+              value: "true"
           livenessProbe:
             httpGet:
               path: /api/user/stats
