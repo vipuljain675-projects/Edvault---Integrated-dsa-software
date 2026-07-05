@@ -22,11 +22,12 @@ export default function LoginPage() {
 
   const detectorRef = useRef<any>(null);
 
-  // Initialize and run didi's Bot Detector SDK when the login page mounts
+  // Initialize and run didi's Bot Detector SDK when the login page mounts.
+  // It connects directly to didi's standalone microservice endpoint.
   useEffect(() => {
     detectorRef.current = initDetector({
       apiKey: "eduvault_prod_key",
-      endpoint: "/api/bot-detect",
+      endpoint: process.env.NEXT_PUBLIC_BOT_DETECTOR_URL || "http://localhost:3000",
       debug: false
     });
     detectorRef.current.start();
