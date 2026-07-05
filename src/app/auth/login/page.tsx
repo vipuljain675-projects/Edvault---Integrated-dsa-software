@@ -75,6 +75,20 @@ export default function LoginPage() {
 
   const handleGoogle = async () => {
     setOauthLoading(true);
+
+    // 🔒 Security Guard: Query didi's Bot Detector score before Google OAuth redirect
+    if (detectorRef.current) {
+      try {
+        const botResult = await detectorRef.current.getScore();
+        if (!botResult.isHuman) {
+          setOauthLoading(false);
+          return toast.error("Security alert: Robotic/automated behavior detected. Access blocked! 🤖⛔", { duration: 5000 });
+        }
+      } catch (err) {
+        console.error("Bot detector check failed, bypassing safely", err);
+      }
+    }
+
     const isConfigured = await checkGoogleOAuth();
     if (!isConfigured) {
       setOauthLoading(false);

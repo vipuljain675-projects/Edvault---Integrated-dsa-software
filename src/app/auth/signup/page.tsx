@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ const passwordChecks = [
 ];
 
 import { checkGoogleOAuth } from "../actions";
+import { initDetector } from "@/lib/bot-detector";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -22,12 +23,43 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
 
+  const detectorRef = useRef<any>(null);
+
+  // Initialize and run didi's Bot Detector SDK when the signup page mounts
+  useEffect(() => {
+    detectorRef.current = initDetector({
+      apiKey: "eduvault_prod_key",
+      endpoint: process.env.NEXT_PUBLIC_BOT_DETECTOR_URL || "http://localhost:3000",
+      debug: false
+    });
+    detectorRef.current.start();
+
+    return () => {
+      if (detectorRef.current) {
+        detectorRef.current.stop();
+      }
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.password) return toast.error("Fill in all fields");
     if (form.password.length < 8) return toast.error("Password must be at least 8 characters");
 
     setLoading(true);
+
+    // 🔒 Security Guard: Query didi's Bot Detector score before registering
+    if (detectorRef.current) {
+      try {
+        const botResult = await detectorRef.current.getScore();
+        if (!botResult.isHuman) {
+          setLoading(false);
+          return toast.error("Security alert: Robotic/automated behavior detected. Access blocked! 🤖⛔", { duration: 5000 });
+        }
+      } catch (err) {
+        console.error("Bot detector check failed, bypassing safely", err);
+      }
+    }
 
     try {
       const res = await fetch("/api/auth/register", {
@@ -64,6 +96,20 @@ export default function SignupPage() {
 
   const handleGoogle = async () => {
     setOauthLoading(true);
+
+    // 🔒 Security Guard: Query didi's Bot Detector score before Google OAuth redirect
+    if (detectorRef.current) {
+      try {
+        const botResult = await detectorRef.current.getScore();
+        if (!botResult.isHuman) {
+          setOauthLoading(false);
+          return toast.error("Security alert: Robotic/automated behavior detected. Access blocked! 🤖⛔", { duration: 5000 });
+        }
+      } catch (err) {
+        console.error("Bot detector check failed, bypassing safely", err);
+      }
+    }
+
     const isConfigured = await checkGoogleOAuth();
     if (!isConfigured) {
       setOauthLoading(false);
