@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -8,6 +8,7 @@ import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react
 import toast from "react-hot-toast";
 
 import { checkGoogleOAuth } from "../actions";
+import { initDetector } from "@/lib/bot-detector";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,10 +20,41 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
 
+  const detectorRef = useRef<any>(null);
+
+  // Initialize and run didi's Bot Detector SDK when the login page mounts
+  useEffect(() => {
+    detectorRef.current = initDetector({
+      apiKey: "eduvault_prod_key",
+      endpoint: "/api/bot-detect",
+      debug: false
+    });
+    detectorRef.current.start();
+
+    return () => {
+      if (detectorRef.current) {
+        detectorRef.current.stop();
+      }
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.email || !form.password) return toast.error("Fill in all fields");
     setLoading(true);
+
+    // 🔒 Security Guard: Query didi's Bot Detector score before authenticating
+    if (detectorRef.current) {
+      try {
+        const botResult = await detectorRef.current.getScore();
+        if (!botResult.isHuman) {
+          setLoading(false);
+          return toast.error("Security alert: Robotic/automated behavior detected. Access blocked! 🤖⛔", { duration: 5000 });
+        }
+      } catch (err) {
+        console.error("Bot detector check failed, bypassing safely", err);
+      }
+    }
 
     const res = await signIn("credentials", {
       email: form.email,
