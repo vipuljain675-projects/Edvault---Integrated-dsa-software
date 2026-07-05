@@ -6,17 +6,40 @@ import SessionProvider from "@/components/auth/SessionProvider";
 import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://edvault-integrated-dsa-software.vercel.app"),
   title: {
-    default: "EduVault — Learn What the Industry Actually Needs",
+    default: "EduVault — Master DSA & Full Stack Engineering",
     template: "%s | EduVault",
   },
   description:
-    "Master DSA, Machine Learning, and Full Stack Engineering with structured paths, AI-powered tutoring, and real-world projects. Built for college students who want to get hired.",
-  keywords: ["edtech", "DSA", "machine learning", "full stack", "online learning", "coding", "programming"],
+    "Learn Data Structures & Algorithms systematically, track daily streaks, sync with LeetCode, and get feedback from Sensei (AI Tutor). Built for student placement prep.",
+  keywords: ["DSA sheet", "LeetCode sync", "AI tutor", "Placement prep", "nextjs", "bot detection", "learning path"],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
-    title: "EduVault",
-    description: "Learn DSA, ML & Full Stack the right way.",
+    title: "EduVault — Master DSA & Full Stack Engineering",
+    description: "Learn DSA systematically, track daily streaks, sync with LeetCode, and get feedback from Sensei (AI Tutor).",
+    url: "https://edvault-integrated-dsa-software.vercel.app",
+    siteName: "EduVault",
+    locale: "en_US",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EduVault — Master DSA & Full Stack Engineering",
+    description: "Learn DSA systematically, track daily streaks, sync with LeetCode, and get feedback from Sensei (AI Tutor).",
+  },
+  icons: {
+    icon: "/favicon.ico",
   },
 };
 
