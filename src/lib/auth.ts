@@ -12,6 +12,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/auth/login",
     error: "/auth/error",
   },
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  trustHost: true,
+  debug: true,
+
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
